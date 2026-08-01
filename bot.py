@@ -1,7 +1,4 @@
-import os
 import logging
-import threading
-from flask import Flask
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler
 from config import BOT_TOKEN
 from handlers import (
@@ -15,19 +12,7 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-app = Flask(__name__)
-
-@app.route('/')
-def home():
-    return "Darknet Bot is running!"
-
-@app.route('/health')
-def health():
-    return "OK", 200
-
-# Запуск бота при старте приложения
-def start_bot():
-    logging.info("🚀 Запуск Telegram бота...")
+def main():
     application = Application.builder().token(BOT_TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
@@ -39,13 +24,8 @@ def start_bot():
     application.add_handler(CommandHandler("est", est))
     application.add_handler(CallbackQueryHandler(handle_back, pattern="back_to_menu"))
 
-    logging.info("✅ Бот запущен и готов к работе!")
+    logging.info("🚀 Бот запущен и работает...")
     application.run_polling()
 
-# Запускаем бота в отдельном потоке сразу после импорта
-bot_thread = threading.Thread(target=start_bot, daemon=True)
-bot_thread.start()
-
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
+    main()
