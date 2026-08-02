@@ -52,5 +52,10 @@ def run_bot():
     application.run_polling()
 
 if __name__ == "__main__":
-    # Запускаем бота в основном потоке
-    run_bot()
+    # Запускаем бота в фоновом потоке
+    bot_thread = threading.Thread(target=run_bot, daemon=True)
+    bot_thread.start()
+
+    # Запускаем Flask-сервер (для Render)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
