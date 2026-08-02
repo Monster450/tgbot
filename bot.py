@@ -1,8 +1,8 @@
 import logging
 import threading
+import os
 from flask import Flask
-from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 from config import BOT_TOKEN
 from handlers import (
     start, menu,
@@ -32,7 +32,6 @@ def run_bot():
     """Запуск Telegram бота"""
     application = Application.builder().token(BOT_TOKEN).build()
 
-    # Команды
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("menu", menu))
     application.add_handler(CommandHandler("ex", ex))
@@ -42,23 +41,16 @@ def run_bot():
     application.add_handler(CommandHandler("est", est))
     application.add_handler(CommandHandler("ban", ban))
 
-    # Кнопки
     application.add_handler(CallbackQueryHandler(handle_back, pattern="back_to_menu"))
     application.add_handler(CallbackQueryHandler(handle_operator_action, pattern="^(accept|decline)_"))
     application.add_handler(CallbackQueryHandler(handle_recall, pattern="^recall_"))
     application.add_handler(CallbackQueryHandler(handle_end_session, pattern="^end_"))
 
-    # Сообщения
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, forward_to_operator))
 
     logging.info("🚀 Bot is running...")
     application.run_polling()
 
 if __name__ == "__main__":
-    # Запускаем бота в отдельном потоке
-    bot_thread = threading.Thread(target=run_bot, daemon=True)
-    bot_thread.start()
-
-    # Запускаем Flask-сервер (для Render)
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
+    # Запускаем бота в основном потоке
+    run_bot()
