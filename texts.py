@@ -1,7 +1,4 @@
-WELCOME = (
-    "Welcome to Exitus non est.\n\n"
-    "Type /menu to see available commands."
-)
+WELCOME = "Welcome to Exitus non est.\n\nType /menu to see available commands."
 
 MENU_TEXT = (
     "Available commands:\n\n"
@@ -10,11 +7,6 @@ MENU_TEXT = (
     "/us — Support & operator\n"
     "/non — Catalog & assistant\n"
     "/est — FAQ"
-)
-
-SECTION_ENTER = (
-    "You are in the {section} section.\n\n"
-    "Press 'Back' to return to the main menu."
 )
 
 WAITING_OPERATOR = (
@@ -45,4 +37,10 @@ FAQ = (
     "Q: Is this legal?\n"
     "A: We provide info. Your responsibility.\n\n"
     "Type /us for more questions."
+)
+
+BANNED_MESSAGE = (
+    "🚫 YOU ARE BANNED\n\n"
+    "Your access is restricted.\n"
+    "You can contact support via /us"
 )

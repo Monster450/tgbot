@@ -1,11 +1,15 @@
 import logging
+import threading
+from flask import Flask
 from telegram import Update
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler, ContextTypes
 from config import BOT_TOKEN
 from handlers import (
     start, menu,
     ex, it, us, non, est,
-    handle_back
+    handle_back, ban, forward_to_operator,
+    handle_operator_action, handle_recall,
+    handle_end_session
 )
 
 logging.basicConfig(
@@ -13,24 +17,48 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("⚠️ Command not recognized. Type /menu for list.")
+# Flask-сервер для Render
+app = Flask(__name__)
 
-def main():
-    app = Application.builder().token(BOT_TOKEN).build()
+@app.route('/')
+def home():
+    return "Bot is running!"
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("menu", menu))
-    app.add_handler(CommandHandler("ex", ex))
-    app.add_handler(CommandHandler("it", it))
-    app.add_handler(CommandHandler("us", us))
-    app.add_handler(CommandHandler("non", non))
-    app.add_handler(CommandHandler("est", est))
-    app.add_handler(CallbackQueryHandler(handle_back, pattern="back_to_menu"))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+@app.route('/health')
+def health():
+    return "OK", 200
+
+def run_bot():
+    """Запуск Telegram бота"""
+    application = Application.builder().token(BOT_TOKEN).build()
+
+    # Команды
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("menu", menu))
+    application.add_handler(CommandHandler("ex", ex))
+    application.add_handler(CommandHandler("it", it))
+    application.add_handler(CommandHandler("us", us))
+    application.add_handler(CommandHandler("non", non))
+    application.add_handler(CommandHandler("est", est))
+    application.add_handler(CommandHandler("ban", ban))
+
+    # Кнопки
+    application.add_handler(CallbackQueryHandler(handle_back, pattern="back_to_menu"))
+    application.add_handler(CallbackQueryHandler(handle_operator_action, pattern="^(accept|decline)_"))
+    application.add_handler(CallbackQueryHandler(handle_recall, pattern="^recall_"))
+    application.add_handler(CallbackQueryHandler(handle_end_session, pattern="^end_"))
+
+    # Сообщения
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, forward_to_operator))
 
     logging.info("🚀 Bot is running...")
-    app.run_polling()
+    application.run_polling()
 
 if __name__ == "__main__":
-    main()
+    # Запускаем бота в отдельном потоке
+    bot_thread = threading.Thread(target=run_bot, daemon=True)
+    bot_thread.start()
+
+    # Запускаем Flask-сервер (для Render)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
