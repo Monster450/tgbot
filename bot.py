@@ -1,5 +1,6 @@
 import logging
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler
+from telegram import Update
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 from config import BOT_TOKEN
 from handlers import (
     start, menu,
@@ -12,6 +13,9 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("⚠️ Command not recognized. Type /menu for list.")
+
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
@@ -23,8 +27,9 @@ def main():
     app.add_handler(CommandHandler("non", non))
     app.add_handler(CommandHandler("est", est))
     app.add_handler(CallbackQueryHandler(handle_back, pattern="back_to_menu"))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
-    logging.info("🚀 Бот запущен и работает...")
+    logging.info("🚀 Bot is running...")
     app.run_polling()
 
 if __name__ == "__main__":
